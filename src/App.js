@@ -162,9 +162,9 @@ function App() {
         </div>
       )}
 
-      {phase === PHASE.GAME_OVER && (
+      {(phase === PHASE.BATTLE || phase === PHASE.GAME_OVER) && (
         <button className="restart-btn" onClick={handleRestart}>
-          Play Again
+          {phase === PHASE.GAME_OVER ? 'Play Again' : '🔄 Reset Game'}
         </button>
       )}
     </div>
