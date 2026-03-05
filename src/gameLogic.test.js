@@ -327,6 +327,28 @@ describe('AI targeting', () => {
     expect(ai.hits.length).toBe(0);
   });
 
+  test('with non-collinear hits from two ships, AI prioritizes extending the line', () => {
+    // Ship 0 horizontal at row 7, cols 5-8 (F8-I8)
+    // Ship 1 vertical at col 6, rows 7-9 (G8-G10)
+    let board = boardWithShip(7, 5, 4, true, 0);
+    board = placeShip(board, 8, 6, 2, false, 1);
+    let ai = createAI();
+
+    let b = board;
+    // Hit G8 (7,6), then F8 (7,5), then G9 (8,6)
+    ({ board: b, ai } = aiFireAtKnownCell(b, ai, 7, 6));
+    ({ board: b, ai } = aiFireAtKnownCell(b, ai, 7, 5));
+    ({ board: b, ai } = aiFireAtKnownCell(b, ai, 8, 6));
+
+    // Hits are non-collinear: (7,6), (7,5), (8,6)
+    // AI should detect horizontal line F8-G8 and extend to E8 (7,4) or H8 (7,7)
+    // It should NOT pick G7 (6,6) which is just a neighbor of G9
+    const { row, col } = aiTurn(b, ai);
+    const isLineExtension =
+      (row === 7 && col === 4) || (row === 7 && col === 7);
+    expect(isLineExtension).toBe(true);
+  });
+
   test('AI stays in target mode if unsunk hits remain after sinking one ship', () => {
     let board = boardWithShip(0, 0, 2, true, 0);
     board = placeShip(board, 5, 5, 3, true, 1);

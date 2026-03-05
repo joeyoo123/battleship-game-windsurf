@@ -131,57 +131,111 @@ export function createAI() {
   };
 }
 
-function getTargetsFromHits(hits, tried) {
-  const targets = [];
+function findLines(hits) {
+  const hitSet = new Set(hits.map((h) => `${h.row},${h.col}`));
+  const visited = new Set();
+  const lines = [];
 
-  if (hits.length === 1) {
-    const { row, col } = hits[0];
-    targets.push(
-      { row: row - 1, col },
-      { row: row + 1, col },
-      { row, col: col - 1 },
-      { row, col: col + 1 }
-    );
-  } else {
-    const rows = hits.map((h) => h.row);
-    const cols = hits.map((h) => h.col);
-    const sameRow = rows.every((r) => r === rows[0]);
-    const sameCol = cols.every((c) => c === cols[0]);
+  for (const h of hits) {
+    const key = `${h.row},${h.col}`;
 
-    if (sameRow) {
-      const minCol = Math.min(...cols);
-      const maxCol = Math.max(...cols);
-      targets.push(
-        { row: rows[0], col: minCol - 1 },
-        { row: rows[0], col: maxCol + 1 }
-      );
-    } else if (sameCol) {
-      const minRow = Math.min(...rows);
-      const maxRow = Math.max(...rows);
-      targets.push(
-        { row: minRow - 1, col: cols[0] },
-        { row: maxRow + 1, col: cols[0] }
-      );
-    } else {
-      for (const h of hits) {
-        targets.push(
-          { row: h.row - 1, col: h.col },
-          { row: h.row + 1, col: h.col },
-          { row: h.row, col: h.col - 1 },
-          { row: h.row, col: h.col + 1 }
-        );
+    // horizontal line through this hit
+    if (!visited.has(`h:${h.row},${h.col}`)) {
+      const line = [h];
+      let c = h.col - 1;
+      while (c >= 0 && hitSet.has(`${h.row},${c}`)) {
+        line.unshift({ row: h.row, col: c });
+        c--;
+      }
+      c = h.col + 1;
+      while (c < BOARD_SIZE && hitSet.has(`${h.row},${c}`)) {
+        line.push({ row: h.row, col: c });
+        c++;
+      }
+      if (line.length >= 2) {
+        for (const cell of line) visited.add(`h:${cell.row},${cell.col}`);
+        lines.push({ dir: 'h', cells: line });
+      }
+    }
+
+    // vertical line through this hit
+    if (!visited.has(`v:${h.row},${h.col}`)) {
+      const line = [h];
+      let r = h.row - 1;
+      while (r >= 0 && hitSet.has(`${r},${h.col}`)) {
+        line.unshift({ row: r, col: h.col });
+        r--;
+      }
+      r = h.row + 1;
+      while (r < BOARD_SIZE && hitSet.has(`${r},${h.col}`)) {
+        line.push({ row: r, col: h.col });
+        r++;
+      }
+      if (line.length >= 2) {
+        for (const cell of line) visited.add(`v:${cell.row},${cell.col}`);
+        lines.push({ dir: 'v', cells: line });
       }
     }
   }
 
-  return targets.filter(
-    (t) =>
-      t.row >= 0 &&
-      t.row < BOARD_SIZE &&
-      t.col >= 0 &&
-      t.col < BOARD_SIZE &&
-      !tried.has(`${t.row},${t.col}`)
-  );
+  const inLine = new Set();
+  for (const l of lines) {
+    for (const cell of l.cells) inLine.add(`${cell.row},${cell.col}`);
+  }
+  const isolated = hits.filter((h) => !inLine.has(`${h.row},${h.col}`));
+
+  return { lines, isolated };
+}
+
+function getTargetsFromHits(hits, tried) {
+  const isValid = (t) =>
+    t.row >= 0 &&
+    t.row < BOARD_SIZE &&
+    t.col >= 0 &&
+    t.col < BOARD_SIZE &&
+    !tried.has(`${t.row},${t.col}`);
+
+  if (hits.length === 1) {
+    const { row, col } = hits[0];
+    return [
+      { row: row - 1, col },
+      { row: row + 1, col },
+      { row, col: col - 1 },
+      { row, col: col + 1 },
+    ].filter(isValid);
+  }
+
+  const { lines, isolated } = findLines(hits);
+
+  // High priority: extend detected lines at their endpoints
+  const priority = [];
+  for (const line of lines) {
+    const first = line.cells[0];
+    const last = line.cells[line.cells.length - 1];
+    if (line.dir === 'h') {
+      priority.push({ row: first.row, col: first.col - 1 });
+      priority.push({ row: last.row, col: last.col + 1 });
+    } else {
+      priority.push({ row: first.row - 1, col: first.col });
+      priority.push({ row: last.row + 1, col: last.col });
+    }
+  }
+
+  const filtered = priority.filter(isValid);
+  if (filtered.length > 0) return filtered;
+
+  // Low priority: all neighbors of isolated hits
+  const fallback = [];
+  for (const h of isolated) {
+    fallback.push(
+      { row: h.row - 1, col: h.col },
+      { row: h.row + 1, col: h.col },
+      { row: h.row, col: h.col - 1 },
+      { row: h.row, col: h.col + 1 }
+    );
+  }
+
+  return fallback.filter(isValid);
 }
 
 export function aiTurn(board, ai) {
