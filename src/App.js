@@ -21,8 +21,8 @@ const PHASE = {
 
 function getMessageClass(message, phase) {
   if (phase === 'game_over') {
-    if (message.includes('win')) return 'win-message';
-    if (message.includes('lose')) return 'lose-message';
+    if (message.includes('Victory')) return 'win-message';
+    if (message.includes('Defeat')) return 'lose-message';
   }
   if (message.includes('sunk') || message.includes('Sunk')) return 'sunk-message';
   if (message.includes('Hit')) return 'hit-message';
