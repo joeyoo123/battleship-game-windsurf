@@ -254,6 +254,24 @@ function getTargetsFromHits(hits, tried) {
   const filtered = priority.filter(isValid);
   if (filtered.length > 0) return filtered;
 
+  // Secondary priority: try endpoints of all lines (not just active)
+  if (activeLines !== lines) {
+    const secondaryPriority = [];
+    for (const line of lines) {
+      const first = line.cells[0];
+      const last = line.cells[line.cells.length - 1];
+      if (line.dir === 'h') {
+        secondaryPriority.push({ row: first.row, col: first.col - 1 });
+        secondaryPriority.push({ row: last.row, col: last.col + 1 });
+      } else {
+        secondaryPriority.push({ row: first.row - 1, col: first.col });
+        secondaryPriority.push({ row: last.row + 1, col: last.col });
+      }
+    }
+    const secondaryFiltered = secondaryPriority.filter(isValid);
+    if (secondaryFiltered.length > 0) return secondaryFiltered;
+  }
+
   // Low priority: all neighbors of isolated hits
   const fallback = [];
   for (const h of isolated) {
