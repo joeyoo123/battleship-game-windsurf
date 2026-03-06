@@ -1,0 +1,11 @@
+# Environment configuration for battleship-game-windsurf
+version: 1
+
+setup:
+  initialize:
+    - command: "cd /home/ubuntu/repos/battleship-game-windsurf && npm install"
+      description: "Install npm dependencies"
+
+  maintenance:
+    - command: "cd /home/ubuntu/repos/battleship-game-windsurf && npm install"
+      description: "Keep npm dependencies up to date"
