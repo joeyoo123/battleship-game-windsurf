@@ -171,7 +171,7 @@ function App() {
             </div>
             <div className="stat-card">
               <div className="stat-value">{playerSunk.length}/{SHIPS.length}</div>
-              <div className="stat-label">Your Lost</div>
+              <div className="stat-label">Your Ships Lost</div>
             </div>
             <div className="stat-card">
               <div className="stat-value">{aiShots}</div>
