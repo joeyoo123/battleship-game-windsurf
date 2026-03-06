@@ -207,9 +207,39 @@ function getTargetsFromHits(hits, tried) {
 
   const { lines, isolated } = findLines(hits);
 
+  // When overlapping lines exist (sharing cells), prioritize the line
+  // whose hits were discovered earliest (lowest max hit-index).
+  let activeLines = lines;
+  if (lines.length > 1) {
+    const hitIndexMap = new Map();
+    hits.forEach((h, i) => hitIndexMap.set(`${h.row},${h.col}`, i));
+
+    // Check if any lines share cells
+    const cellToLineCount = new Map();
+    for (const line of lines) {
+      for (const cell of line.cells) {
+        const key = `${cell.row},${cell.col}`;
+        cellToLineCount.set(key, (cellToLineCount.get(key) || 0) + 1);
+      }
+    }
+    const hasOverlap = [...cellToLineCount.values()].some((count) => count > 1);
+
+    if (hasOverlap) {
+      // Score each line by the max hit-index of its cells (lower = discovered earlier)
+      const scored = lines.map((line) => {
+        const maxIdx = Math.max(
+          ...line.cells.map((c) => hitIndexMap.get(`${c.row},${c.col}`))
+        );
+        return { line, score: maxIdx };
+      });
+      const minScore = Math.min(...scored.map((s) => s.score));
+      activeLines = scored.filter((s) => s.score === minScore).map((s) => s.line);
+    }
+  }
+
   // High priority: extend detected lines at their endpoints
   const priority = [];
-  for (const line of lines) {
+  for (const line of activeLines) {
     const first = line.cells[0];
     const last = line.cells[line.cells.length - 1];
     if (line.dir === 'h') {
@@ -223,6 +253,24 @@ function getTargetsFromHits(hits, tried) {
 
   const filtered = priority.filter(isValid);
   if (filtered.length > 0) return filtered;
+
+  // Secondary priority: try endpoints of all lines (not just active)
+  if (activeLines !== lines) {
+    const secondaryPriority = [];
+    for (const line of lines) {
+      const first = line.cells[0];
+      const last = line.cells[line.cells.length - 1];
+      if (line.dir === 'h') {
+        secondaryPriority.push({ row: first.row, col: first.col - 1 });
+        secondaryPriority.push({ row: last.row, col: last.col + 1 });
+      } else {
+        secondaryPriority.push({ row: first.row - 1, col: first.col });
+        secondaryPriority.push({ row: last.row + 1, col: last.col });
+      }
+    }
+    const secondaryFiltered = secondaryPriority.filter(isValid);
+    if (secondaryFiltered.length > 0) return secondaryFiltered;
+  }
 
   // Low priority: all neighbors of isolated hits
   const fallback = [];
