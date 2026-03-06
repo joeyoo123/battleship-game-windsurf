@@ -57,22 +57,30 @@ function ShipPlacer({ board, setBoard, onComplete, shipsPlaced, setShipsPlaced }
   return (
     <div className="ship-placer">
       <div className="placement-controls">
+        <div className="placement-progress">
+          {SHIPS.map((_, idx) => (
+            <span
+              key={idx}
+              className={`progress-dot${idx < shipsPlaced ? ' filled' : ''}${idx === shipsPlaced ? ' current' : ''}`}
+            />
+          ))}
+        </div>
         {shipsPlaced < SHIPS.length && (
           <div className="current-ship">
             <p>
               Placing: <strong>{currentShip.name}</strong> (size {currentShip.size})
             </p>
             <button className="orient-btn" onClick={() => setIsHorizontal(!isHorizontal)}>
-              {isHorizontal ? '↔ Horizontal' : '↕ Vertical'}
+              {isHorizontal ? 'Horizontal' : 'Vertical'}
             </button>
           </div>
         )}
         <div className="placement-buttons">
           <button className="action-btn" onClick={handleRandomize}>
-            🎲 Random Placement
+            Random Placement
           </button>
-          <button className="action-btn" onClick={handleReset}>
-            🔄 Reset
+          <button className="action-btn reset-btn" onClick={handleReset}>
+            Reset
           </button>
         </div>
       </div>
@@ -89,14 +97,14 @@ function ShipPlacer({ board, setBoard, onComplete, shipsPlaced, setShipsPlaced }
       <div className="ship-list">
         <h3>Fleet</h3>
         {SHIPS.map((ship, idx) => (
-          <div key={ship.name} className={`ship-item ${idx < shipsPlaced ? 'placed' : ''}`}>
+          <div key={ship.name} className={`ship-item${idx < shipsPlaced ? ' placed' : ''}${idx === shipsPlaced ? ' active' : ''}`}>
             <span>{ship.name}</span>
             <span className="ship-blocks">
               {Array.from({ length: ship.size }, (_, i) => (
-                <span key={i} className="ship-block">■</span>
+                <span key={i} className="ship-block"></span>
               ))}
             </span>
-            {idx < shipsPlaced && <span className="check">✓</span>}
+            {idx < shipsPlaced && <span className="check">&#10003;</span>}
           </div>
         ))}
       </div>

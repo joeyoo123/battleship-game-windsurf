@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@500;700;900&display=swap');
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -5,12 +7,37 @@
 }
 
 body {
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, #0c1445 0%, #1a237e 40%, #0d47a1 100%);
-  color: #e0e0e0;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #020c1b 0%, #0a1628 30%, #0d2137 60%, #091a2a 100%);
+  color: #c8d6e5;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(16, 65, 115, 0.25) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(13, 71, 161, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(0, 105, 148, 0.12) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 #root {
   min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+::selection {
+  background: rgba(66, 165, 245, 0.3);
+  color: #fff;
 }

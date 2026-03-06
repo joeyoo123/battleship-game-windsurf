@@ -16,9 +16,9 @@ function Board({ board, isOwn, onCellClick, disabled }) {
   };
 
   const getCellContent = (cell) => {
-    if (cell.state === CELL_STATE.HIT) return '🔥';
-    if (cell.state === CELL_STATE.MISS) return '•';
-    if (cell.state === CELL_STATE.SUNK) return '💀';
+    if (cell.state === CELL_STATE.HIT) return '\u2716';
+    if (cell.state === CELL_STATE.MISS) return '\u2022';
+    if (cell.state === CELL_STATE.SUNK) return '\u2716';
     return '';
   };
 
